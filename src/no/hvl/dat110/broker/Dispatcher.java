@@ -1,6 +1,7 @@
 package no.hvl.dat110.broker;
 
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import no.hvl.dat110.common.TODO;
@@ -90,8 +91,23 @@ public class Dispatcher extends Stopable {
 		String user = msg.getUser();
 
 		Logger.log("onConnect:" + msg.toString());
+		// without buffer implementation:
+		// storage.addClientSession(user, connection);
+		
+		//with buffer implementation: 
+		if (storage.getSession(user) == null) {
+			storage.addClientSession(user, connection);
+		} else {
+			storage.reconnectUser(user, connection);
 
-		storage.addClientSession(user, connection);
+			ArrayList<Message> messages = storage.getMessageBuffer(user);
+
+			for (Message message : messages) {
+				storage.getSession(user).send(message);
+			}
+
+			storage.emptyMessageBuffer(user);
+		}
 
 	}
 
@@ -101,8 +117,8 @@ public class Dispatcher extends Stopable {
 		String user = msg.getUser();
 
 		Logger.log("onDisconnect:" + msg.toString());
-
-		storage.removeClientSession(user);
+		// with buffer implementation not remove client session at disconnect
+		// storage.removeClientSession(user);
 
 	}
 
@@ -174,10 +190,15 @@ public class Dispatcher extends Stopable {
 		Collection<ClientSession> clients = storage.getSessions();
 		
 		for (ClientSession csess : clients) {
-			if (storage.getSubscribers(topic).contains(user)) {
-				csess.send(msg);
+			// buffer implementation by this new if-else check to handle if a user is not connected
+			if(storage.isConnected(user)) {
+				//before buffer implementation this inner if-sentence was all
+				if (storage.getSubscribers(topic).contains(user)) {
+					csess.send(msg);
+				}
+			} else {
+				storage.addMessageToBuffer(user, msg);
 			}
-
 		}
 		
 		// throw new UnsupportedOperationException(TODO.method());

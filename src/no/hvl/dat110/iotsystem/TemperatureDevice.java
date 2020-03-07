@@ -31,7 +31,7 @@ public class TemperatureDevice {
 		client.disconnect();
 		// TODO - start
 
-		// create a client object and use it to
+		// create a client object and use it to // client object is already created on line 17, only need to use it
 		// - connect to the broker
 		client.connect();
 		// - publish the temperature(s)
