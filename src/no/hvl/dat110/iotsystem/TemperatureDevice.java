@@ -32,8 +32,6 @@ public class TemperatureDevice {
 		// TODO - start
 
 		// create a client object and use it to
-		Client client = new Client("temperaturesensor", Common.BROKERHOST, Common.BROKERPORT);
-
 		// - connect to the broker
 		client.connect();
 		// - publish the temperature(s)
